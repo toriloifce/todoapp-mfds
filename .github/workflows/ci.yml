@@ -1,0 +1,42 @@
+name: Continuous Integration (CI)
+
+# O pipeline roda sempre que houver um Pull Request ou Push na branch principal
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+    # 1. Faz o download do código do repositório para a máquina virtual do GitHub
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    # 2. Configura o ambiente Docker na máquina virtual
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
+    # 3. Executa a entrega obrigatória: Build Automático da imagem
+    - name: Build Docker Image
+      run: |
+        docker build -t meu-site-local:latest .
+
+    # 4. Executa a entrega obrigatória: Teste Automatizado Básico
+    # Como seu projeto é um site estático, testamos se a imagem foi gerada e se o Nginx responde.
+    - name: Run Basic Automated Test
+      run: |
+        # Inicia o container em segundo plano
+        docker run -d -p 8080:80 --name test-container meu-site-local:latest
+        
+        # Aguarda 3 segundos para o Nginx subir totalmente
+        sleep 3
+        
+        # Faz uma requisição HTTP interna para testar se o index.html responde (Status 200)
+        curl -f http://localhost:8080
+        
+        # Se o curl falhar, o pipeline falha automaticamente. Limpa o container depois.
+        docker stop test-container
