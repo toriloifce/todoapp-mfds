@@ -2,7 +2,7 @@ const express = require('express');
 const fs = require('fs');
 const path = require('path');
 const app = express();
-const PORT = 80;
+const PORT = process.env.PORT || 80;
 
 // Caminho do arquivo de dados dentro do contêiner (conforme o slide do professor)
 const ARQUIVO = '/dados/tarefas.json';
